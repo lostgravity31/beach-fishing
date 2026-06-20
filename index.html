@@ -252,7 +252,7 @@ function stepAuto(dt){
 }
 
 // ── WAVES ──
-function mkWave(pos){return{pos,amp:3+Math.random()*38,spd:.022+Math.random()*.045,freq:.5+Math.random()*1.2,ph:Math.random()*Math.PI*2};}
+function mkWave(pos){return{pos,amp:3+Math.random()*38,spd:.011+Math.random()*.0225,freq:.5+Math.random()*1.2,ph:Math.random()*Math.PI*2};}
 const waves=Array.from({length:9},(_,i)=>mkWave(i/9));
 const foam=[];
 let curDL=null;
@@ -479,7 +479,7 @@ function drawOcean(){
     const fy=horizY+Math.pow(w.pos,.65)*(surfY-horizY);
     const amp=w.amp*Math.pow(w.pos,.8);
     const pts=[];
-    for(let x=0;x<=W;x+=5)pts.push({x,y:fy-amp*.4+Math.sin(x/W*Math.PI*2*w.freq+t*(0.38+w.pos*0.38)+w.ph)*amp*.55});
+    for(let x=0;x<=W;x+=5)pts.push({x,y:fy-amp*.4+Math.sin(x/W*Math.PI*2*w.freq+t*(0.19+w.pos*0.19)+w.ph)*amp*.55});
     ctx.beginPath();ctx.moveTo(0,surfY+8);
     for(const p of pts)ctx.lineTo(p.x,p.y);
     ctx.lineTo(W,surfY+8);ctx.closePath();
@@ -503,7 +503,7 @@ function drawOcean(){
     }
   }
   // Soft shore wash — gentle translucent gradient, no hard edge
-  const t2=t*0.38,sa=.10+Math.sin(t2*.6)*.04;
+  const t2=t*0.19,sa=.10+Math.sin(t2*.6)*.04;
   ctx.globalAlpha=sa;
   ctx.fillStyle='rgba(195,228,252,1)';
   ctx.beginPath();ctx.moveTo(0,surfY);
@@ -611,76 +611,55 @@ function drawTentChair(cx,by){
 }
 function drawTent(){
   const{groundY,W}=L;
-  const tx=W*0.23,by=groundY;
-  const hw=66,ht=78,dp=38,dpY=14;
-  const c1='#1ab0a0',c2='#edeae0',cd='#0d8878',cs='#12988a',cp='#d4c888';
+  const tx=W*0.20,by=groundY;
+  const hw=198,ht=210,dp=52,dpY=20;
   // Shadow
-  ctx.fillStyle='rgba(0,0,0,0.14)';
-  ctx.beginPath();ctx.ellipse(tx+dp/2,by+5,hw+dp/2+6,7,0,0,Math.PI*2);ctx.fill();
-  // Back wall
-  ctx.fillStyle=cd;
+  ctx.fillStyle='rgba(0,0,0,0.12)';
+  ctx.beginPath();ctx.ellipse(tx+dp/2,by+6,hw+dp/2+8,10,0,0,Math.PI*2);ctx.fill();
+  // Canopy top — red
+  ctx.fillStyle='#cc1a10';
   ctx.beginPath();
-  ctx.moveTo(tx-hw+dp,by-dpY);ctx.lineTo(tx-hw+dp,by-ht-dpY);
-  ctx.lineTo(tx+hw+dp,by-ht-dpY);ctx.lineTo(tx+hw+dp,by-dpY);
+  ctx.moveTo(tx-hw,by-ht);ctx.lineTo(tx,by-ht-22);ctx.lineTo(tx+hw,by-ht);
+  ctx.lineTo(tx+hw+dp,by-ht-dpY);ctx.lineTo(tx+dp,by-ht-22-dpY);ctx.lineTo(tx-hw+dp,by-ht-dpY);
   ctx.closePath();ctx.fill();
-  ctx.fillStyle='rgba(255,255,255,0.11)';
-  for(let i=0;i<4;i+=2)ctx.fillRect(tx-hw+dp+i*(hw*2/4),by-ht-dpY,hw*2/4,ht);
-  // Roof
-  ctx.fillStyle=c1;
-  ctx.beginPath();
-  ctx.moveTo(tx-hw,by-ht);ctx.lineTo(tx,by-ht-15);ctx.lineTo(tx+hw,by-ht);
-  ctx.lineTo(tx+hw+dp,by-ht-dpY);ctx.lineTo(tx+dp,by-ht-15-dpY);ctx.lineTo(tx-hw+dp,by-ht-dpY);
-  ctx.closePath();ctx.fill();
-  ctx.fillStyle=c2;ctx.globalAlpha=0.5;
-  ctx.beginPath();
-  ctx.moveTo(tx-18,by-ht);ctx.lineTo(tx,by-ht-15);ctx.lineTo(tx+18,by-ht);
-  ctx.lineTo(tx+18+dp,by-ht-dpY);ctx.lineTo(tx+dp,by-ht-15-dpY);ctx.lineTo(tx-18+dp,by-ht-dpY);
-  ctx.closePath();ctx.fill();ctx.globalAlpha=1;
-  // Right side wall
-  ctx.fillStyle=cs;
-  ctx.beginPath();
-  ctx.moveTo(tx+hw,by);ctx.lineTo(tx+hw,by-ht);
-  ctx.lineTo(tx+hw+dp,by-ht-dpY);ctx.lineTo(tx+hw+dp,by-dpY);
-  ctx.closePath();ctx.fill();
+  // Canopy highlight
   ctx.fillStyle='rgba(255,255,255,0.12)';
   ctx.beginPath();
-  ctx.moveTo(tx+hw+dp*0.3,by-dpY*0.3);ctx.lineTo(tx+hw+dp*0.3,by-ht-dpY*0.3);
-  ctx.lineTo(tx+hw+dp*0.6,by-ht-dpY*0.6);ctx.lineTo(tx+hw+dp*0.6,by-dpY*0.6);
+  ctx.moveTo(tx-hw*0.5,by-ht);ctx.lineTo(tx,by-ht-22);ctx.lineTo(tx+hw*0.5,by-ht);
+  ctx.lineTo(tx+hw*0.5+dp,by-ht-dpY);ctx.lineTo(tx+dp,by-ht-22-dpY);ctx.lineTo(tx-hw*0.5+dp,by-ht-dpY);
   ctx.closePath();ctx.fill();
-  // Front left panel
-  ctx.fillStyle=c1;
+  // Darker underside of canopy
+  ctx.fillStyle='rgba(0,0,0,0.18)';
   ctx.beginPath();
-  ctx.moveTo(tx-hw,by);ctx.lineTo(tx-hw,by-ht);ctx.lineTo(tx-hw+22,by-ht);ctx.lineTo(tx-hw+22,by);
+  ctx.moveTo(tx-hw,by-ht+4);ctx.lineTo(tx,by-ht-18);ctx.lineTo(tx+hw,by-ht+4);
+  ctx.lineTo(tx+hw+dp,by-ht-dpY+4);ctx.lineTo(tx+dp,by-ht-18-dpY);ctx.lineTo(tx-hw+dp,by-ht-dpY+4);
   ctx.closePath();ctx.fill();
-  ctx.fillStyle=c2;ctx.globalAlpha=0.52;ctx.fillRect(tx-hw+7,by-ht,9,ht);ctx.globalAlpha=1;
-  // Front right panel
-  ctx.fillStyle=c1;
-  ctx.beginPath();
-  ctx.moveTo(tx+hw-22,by);ctx.lineTo(tx+hw-22,by-ht);ctx.lineTo(tx+hw,by-ht);ctx.lineTo(tx+hw,by);
-  ctx.closePath();ctx.fill();
-  ctx.fillStyle=c2;ctx.globalAlpha=0.52;ctx.fillRect(tx+hw-16,by-ht,9,ht);ctx.globalAlpha=1;
-  // Scallop valance along front top
-  const nsw=hw*2/6;
-  for(let i=0;i<6;i++){
+  // Scallop valance along front edge
+  const nsw=hw*2/10;
+  for(let i=0;i<10;i++){
     const vx=tx-hw+i*nsw;
-    ctx.fillStyle=i%2===0?c1:cd;
-    ctx.beginPath();ctx.moveTo(vx,by-ht);ctx.quadraticCurveTo(vx+nsw/2,by-ht+11,vx+nsw,by-ht);
+    ctx.fillStyle=i%2===0?'#cc1a10':'#991008';
+    ctx.beginPath();ctx.moveTo(vx,by-ht);ctx.quadraticCurveTo(vx+nsw/2,by-ht+20,vx+nsw,by-ht);
     ctx.closePath();ctx.fill();
   }
-  // Corner poles
+  // 4 corner legs only — no walls
   ctx.lineCap='round';
-  ctx.strokeStyle=cp;ctx.lineWidth=4.5;
-  ctx.beginPath();ctx.moveTo(tx-hw,by);ctx.lineTo(tx-hw,by-ht-2);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(tx+hw,by);ctx.lineTo(tx+hw,by-ht-2);ctx.stroke();
-  ctx.strokeStyle='#b8a868';ctx.lineWidth=3;
-  ctx.beginPath();ctx.moveTo(tx-hw+dp,by-dpY);ctx.lineTo(tx-hw+dp,by-ht-dpY-2);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(tx+hw+dp,by-dpY);ctx.lineTo(tx+hw+dp,by-ht-dpY-2);ctx.stroke();
+  ctx.strokeStyle='#d4c888';ctx.lineWidth=7;
+  ctx.beginPath();ctx.moveTo(tx-hw,by);ctx.lineTo(tx-hw,by-ht);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(tx+hw,by);ctx.lineTo(tx+hw,by-ht);ctx.stroke();
+  ctx.strokeStyle='#b8a868';ctx.lineWidth=5;
+  ctx.beginPath();ctx.moveTo(tx-hw+dp,by-dpY);ctx.lineTo(tx-hw+dp,by-ht-dpY);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(tx+hw+dp,by-dpY);ctx.lineTo(tx+hw+dp,by-ht-dpY);ctx.stroke();
+  // Pole cap balls
   ctx.fillStyle='#e4da98';
-  ctx.beginPath();ctx.arc(tx-hw,by-ht-2,3.5,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.arc(tx+hw,by-ht-2,3.5,0,Math.PI*2);ctx.fill();
-  // Chairs inside tent opening
-  drawTentChair(tx-24,by);
-  drawTentChair(tx+24,by);
+  ctx.beginPath();ctx.arc(tx-hw,by-ht,6,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(tx+hw,by-ht,6,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#c8b870';
+  ctx.beginPath();ctx.arc(tx-hw+dp,by-ht-dpY,4.5,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(tx+hw+dp,by-ht-dpY,4.5,0,Math.PI*2);ctx.fill();
+  // Chairs under canopy
+  drawTentChair(tx-50,by);
+  drawTentChair(tx+50,by);
 }
 
 // ── NIGHT OVERLAY ──
@@ -1221,7 +1200,7 @@ function update(dt){
 
   for(const w of waves){
     w.pos+=w.spd*dt;
-    if(w.pos>1.1){w.pos=-.05+Math.random()*.12;w.amp=3+Math.random()*38;w.spd=.022+Math.random()*.045;w.freq=.5+Math.random()*1.2;w.ph=Math.random()*Math.PI*2;}
+    if(w.pos>1.1){w.pos=-.05+Math.random()*.12;w.amp=3+Math.random()*38;w.spd=.011+Math.random()*.0225;w.freq=.5+Math.random()*1.2;w.ph=Math.random()*Math.PI*2;}
   }
 
   // Sharks
