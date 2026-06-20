@@ -611,8 +611,8 @@ function drawTentChair(cx,by){
 }
 function drawTent(){
   const{groundY,W}=L;
-  const tx=W*0.20,by=groundY;
-  const hw=198,ht=210,dp=52,dpY=20;
+  const tx=W*0.24,by=groundY;
+  const hw=149,ht=158,dp=39,dpY=15;
   // Shadow
   ctx.fillStyle='rgba(0,0,0,0.12)';
   ctx.beginPath();ctx.ellipse(tx+dp/2,by+6,hw+dp/2+8,10,0,0,Math.PI*2);ctx.fill();
@@ -991,7 +991,7 @@ function drawChar(){
     const sc2=1-wade*.22;
     const charY2=groundY-wade*(groundY-surfY+20)*.82+bob;
     drawRodInHand(px,charY2,sc2);
-    if(lineActive&&state===ST.LINE_OUT){
+    if(lineActive&&(state===ST.LINE_OUT||state===ST.NIBBLE||state===ST.REELING)){
       const tipX=px+90*sc2,tipY=charY2-162*sc2;
       drawLine(tipX,tipY);
     }
