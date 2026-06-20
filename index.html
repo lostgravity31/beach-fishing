@@ -962,7 +962,7 @@ function charBody(leg){
 // ── DRAW CHARACTER ──
 function drawChar(){
   const{groundY,surfY}=L;
-  const isSitting=state===ST.SITTING||state===ST.NIBBLE;
+  const isSitting=state===ST.SITTING||(state===ST.NIBBLE&&rodPlaced);
   if(isSitting){drawSittingChar();return;}
   const t=Date.now()/1000;
   const moving=(keys.l||keys.r||!!autoTarget)&&!isSitting;
@@ -1168,7 +1168,7 @@ function syncUI(){
   btn.className='btn ab'+(show?' on':'')+(show?' '+cls:'')+(pulse?' pulse':'');
   ic.textContent=icTxt;lbl.textContent=lblTxt;
   const fishBtn=document.getElementById('fish-btn');
-  fishBtn.className='btn ab'+((state===ST.ROD_PLACED||state===ST.SITTING)?' on':'');
+  fishBtn.className='btn ab'+((state===ST.ROD_PLACED||state===ST.SITTING||state===ST.LINE_OUT)?' on':'');
   const meter=document.getElementById('reel-wrap');
   if(state===ST.REELING){
     meter.className='on';
@@ -1250,7 +1250,7 @@ function update(dt){
 
   if(state===ST.CASTING){
     castProg+=dt*1.9;
-    if(castProg>=1){lineActive=true;state=ST.LINE_OUT;showMsg('Line is out! Wade back (▼) and walk to the PVC holder.',3500);}
+    if(castProg>=1){lineActive=true;state=ST.LINE_OUT;showMsg('Line is out! Press FISH to fish from here, or walk to the PVC holder to place your rod.',4500);}
   }
 
   if(state===ST.ROD_PLACED||state===ST.SITTING){
@@ -1267,7 +1267,7 @@ function update(dt){
     bend=Math.min(1,bend+dt*3);nibT-=dt;
     if(nibT<=0){
       nibN--;
-      if(nibN<=0){bend=0;state=ST.ROD_PLACED;waitT=4+Math.random()*9;showMsg('Got off… watching the rod.',2000);}
+      if(nibN<=0){bend=0;if(rodPlaced){state=ST.ROD_PLACED;waitT=4+Math.random()*9;showMsg('Got off… watching the rod.',2000);}else{state=ST.LINE_OUT;showMsg('Got off… tap FISH to try again!',2500);}}
       else nibT=.45+Math.random()*.5;
     }
   }
@@ -1315,8 +1315,12 @@ function doCtx(){
   } else if((state===ST.ROD_PLACED||state===ST.SITTING)&&nearChair()){
     state=ST.SITTING;showMsg('Settled in the chair… watching the rod 👀',2500);
   } else if(state===ST.NIBBLE){
-    startAuto(L.pvcX,0,230,()=>{state=ST.REELING;reelProg=.05;showMsg('Reel it in — tap REEL fast!');});
-    state=ST.RUNNING;
+    if(rodPlaced){
+      startAuto(L.pvcX,0,230,()=>{state=ST.REELING;reelProg=.05;showMsg('Reel it in — tap REEL fast!');});
+      state=ST.RUNNING;
+    } else {
+      state=ST.REELING;reelProg=.05;showMsg('Reel it in — tap REEL fast!');
+    }
   } else if(state===ST.REELING){
     reelTap=Math.min(1,reelTap+.35);
     reelProg+=.09+reelTap*.06;
@@ -1329,6 +1333,11 @@ function doFish(){
     hooked=pickFish();nibN=2;nibT=0.8;bend=0;
     state=ST.NIBBLE;
     const msg=hooked.name==='Bull Shark'?'🦈 SHARK ON THE LINE! Run to the rod NOW!':'🎣 Rod is bending — tap REEL and run to it!';
+    showMsg(msg,3500);
+  } else if(state===ST.LINE_OUT){
+    hooked=pickFish();nibN=2;nibT=0.8;bend=0;
+    state=ST.NIBBLE;
+    const msg=hooked.name==='Bull Shark'?'🦈 SHARK ON THE LINE! Tap REEL!':'🎣 Fish on! Tap REEL to reel it in!';
     showMsg(msg,3500);
   }
 }
