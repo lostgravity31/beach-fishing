@@ -1379,8 +1379,10 @@ document.addEventListener('keydown',e=>{
   if(e.key==='ArrowRight')keys.r=1;
   if(e.key==='ArrowUp')  {e.preventDefault();keys.u=1;}
   if(e.key==='ArrowDown'){e.preventDefault();keys.d=1;}
-  if((e.key===' '||e.key==='Enter')&&!castCharging){e.preventDefault();startCastCharge();}
+  if((e.key===' '||e.key==='Enter'||e.key==='c'||e.key==='C')&&!castCharging){e.preventDefault();startCastCharge();}
   if(e.key==='r'||e.key==='R')doCtx();
+  if(e.key==='s'||e.key==='S')doCtx();
+  if(e.key==='p'||e.key==='P')doCtx();
   if(e.key==='f'||e.key==='F')doFish();
 });
 document.addEventListener('keyup',e=>{
@@ -1388,7 +1390,7 @@ document.addEventListener('keyup',e=>{
   if(e.key==='ArrowRight')keys.r=0;
   if(e.key==='ArrowUp')   keys.u=0;
   if(e.key==='ArrowDown') keys.d=0;
-  if(e.key===' '||e.key==='Enter')releaseCast();
+  if(e.key===' '||e.key==='Enter'||e.key==='c'||e.key==='C')releaseCast();
 });
 
 px=C.width/2;
