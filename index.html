@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Gulf Shore Fishing</title>
+<title>Gulf of America Fishing</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { background:#000; display:flex; align-items:center; justify-content:center; height:100vh; overflow:hidden; font-family:system-ui,-apple-system,sans-serif; }
@@ -48,16 +48,72 @@ canvas { display:block; touch-action:none; }
 #bl { top:55px; left:0; }
 #br { top:55px; left:110px; }
 #bd { top:110px; left:55px; }
+/* Auth modal */
+#auth-modal{position:fixed;inset:0;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;z-index:200;}
+#auth-box{background:#0a1628;border:1px solid rgba(80,160,255,0.4);border-radius:16px;padding:28px 32px;width:320px;color:#fff;max-width:90vw;}
+#auth-box h2{font-size:20px;margin-bottom:3px;text-align:center;}
+#auth-box p{font-size:12px;opacity:.6;text-align:center;margin-bottom:18px;}
+.auth-input{width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 14px;color:#fff;font-size:14px;margin-bottom:10px;outline:none;}
+.auth-input::placeholder{color:rgba(255,255,255,0.35);}
+.auth-btn{width:100%;padding:11px;border-radius:8px;border:none;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;}
+.auth-btn.primary{background:#1a6fe8;color:#fff;}
+.auth-btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.25);color:rgba(255,255,255,0.7);}
+#auth-err{color:#ff6b6b;font-size:12px;text-align:center;min-height:16px;margin-bottom:6px;}
+#auth-toggle{font-size:12px;text-align:center;color:rgba(255,255,255,0.55);cursor:pointer;}
+#auth-toggle span{color:#60b0ff;text-decoration:underline;}
+/* Leaderboard */
+#lb-panel{position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:150;display:none;flex-direction:column;align-items:center;padding:28px 16px 20px;overflow-y:auto;}
+#lb-panel.on{display:flex;}
+#lb-panel h2{color:#fff;font-size:22px;margin-bottom:4px;}
+#lb-sub{color:rgba(255,255,255,.45);font-size:12px;margin-bottom:18px;}
+#lb-table{width:100%;max-width:480px;border-collapse:collapse;}
+#lb-table th{color:rgba(255,255,255,0.45);font-size:11px;letter-spacing:1px;padding:6px 10px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.1);}
+#lb-table td{padding:10px;color:#fff;font-size:14px;border-bottom:1px solid rgba(255,255,255,0.06);}
+.lb-me td{background:rgba(80,160,255,0.12);}
+#lb-close{margin-top:24px;padding:10px 36px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#fff;font-size:14px;cursor:pointer;}
+/* Unlock toast */
+#unlock-toast{position:absolute;left:50%;transform:translateX(-50%);top:108px;background:linear-gradient(135deg,#1a0040,#3a0080);border:1px solid rgba(190,90,255,0.65);color:#d090ff;border-radius:12px;padding:9px 20px;font-size:13px;font-weight:600;opacity:0;transition:opacity .4s;text-align:center;pointer-events:none;white-space:nowrap;}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 <canvas id="c"></canvas>
+
+<!-- Auth Modal -->
+<div id="auth-modal">
+  <div id="auth-box">
+    <h2>🎣 Gulf of America Fishing</h2>
+    <p>Sign in to track your catches and compete on the leaderboard</p>
+    <div id="auth-err"></div>
+    <input class="auth-input" id="auth-email" type="email" placeholder="Email">
+    <input class="auth-input" id="auth-username" type="text" placeholder="Username (display name)" style="display:none">
+    <input class="auth-input" id="auth-pass" type="password" placeholder="Password">
+    <button class="auth-btn primary" id="auth-submit">Sign In</button>
+    <button class="auth-btn secondary" id="auth-guest">Play as Guest</button>
+    <div id="auth-toggle">Don't have an account? <span id="auth-switch">Sign up</span></div>
+  </div>
+</div>
+
+<!-- Leaderboard Panel -->
+<div id="lb-panel">
+  <h2>🏆 Leaderboard</h2>
+  <div id="lb-sub">Top anglers at Gulf of America</div>
+  <table id="lb-table">
+    <thead><tr><th>#</th><th>Angler</th><th>Fish</th><th>Points</th></tr></thead>
+    <tbody id="lb-body"></tbody>
+  </table>
+  <button id="lb-close">Close</button>
+</div>
+
 <div id="ui">
   <div id="hud">
-    <div class="pill">🎣 Caught: <span id="fc">0</span></div>
-    <div class="pill" id="bp" style="display:none">Best: <span id="bn">—</span></div>
+    <div class="pill" id="user-pill" title="Tap to sign out">👤 <span id="user-name">Guest</span></div>
+    <div class="pill">🎣 <span id="fc">0</span></div>
+    <div class="pill">⭐ <span id="pts-display">0</span> pts</div>
+    <div class="pill" id="lb-btn">🏆</div>
   </div>
   <div id="msg"></div>
+  <div id="unlock-toast"></div>
   <div id="catch-card">
     <button id="catch-x">✕</button>
     <canvas id="fish-canvas" width="190" height="100"></canvas>
@@ -90,16 +146,22 @@ function resize() { C.width = innerWidth; C.height = innerHeight; }
 resize(); window.addEventListener('resize', () => { resize(); initL(); initSharks(); initCrabs(); initJelly(); });
 
 const FISH = [
-  {name:'Whiting',         sci:'Southern Kingfish',  w:'0.8',   pts:2,   r:.25},
-  {name:'Pompano',         sci:'Florida Pompano',    w:'1.5',   pts:4,   r:.21},
-  {name:'Speckled Trout',  sci:'Spotted Sea Trout',  w:'2.8',   pts:6,   r:.17},
-  {name:'Redfish',         sci:'Red Drum',           w:'3.4',   pts:7,   r:.14},
-  {name:'Flounder',        sci:'Southern Flounder',  w:'2.1',   pts:5,   r:.09},
-  {name:'Bluefish',        sci:'Bluefish',           w:'3.0',   pts:6,   r:.06},
-  {name:'Spanish Mackerel',sci:'Spanish Mackerel',   w:'4.5',   pts:10,  r:.025},
-  {name:'Sheepshead',      sci:'Sheepshead',         w:'5.0',   pts:12,  r:.012},
-  {name:'Cobia',           sci:'Cobia',              w:'18.0',  pts:25,  r:.003},
-  {name:'Bull Shark',      sci:'Bull Shark',         w:'185.0', pts:150, r:.015},
+  {name:'Whiting',         sci:'Southern Kingfish',  w:'0.8',   pts:2,   r:.25,  unlock:0},
+  {name:'Pompano',         sci:'Florida Pompano',    w:'1.5',   pts:4,   r:.21,  unlock:0},
+  {name:'Speckled Trout',  sci:'Spotted Sea Trout',  w:'2.8',   pts:6,   r:.17,  unlock:75},
+  {name:'Redfish',         sci:'Red Drum',           w:'3.4',   pts:7,   r:.14,  unlock:75},
+  {name:'Flounder',        sci:'Southern Flounder',  w:'2.1',   pts:5,   r:.09,  unlock:75},
+  {name:'Bluefish',        sci:'Bluefish',           w:'3.0',   pts:6,   r:.06,  unlock:75},
+  {name:'Spanish Mackerel',sci:'Spanish Mackerel',   w:'4.5',   pts:10,  r:.025, unlock:200},
+  {name:'Sheepshead',      sci:'Sheepshead',         w:'5.0',   pts:12,  r:.012, unlock:200},
+  {name:'Cobia',           sci:'Cobia',              w:'18.0',  pts:25,  r:.003, unlock:200},
+  {name:'Bull Shark',      sci:'Bull Shark',         w:'185.0', pts:150, r:.015, unlock:500},
+];
+const UNLOCK_TIERS=[
+  {pts:0,   label:'Starter waters',   fish:['Whiting','Pompano']},
+  {pts:75,  label:'Inshore waters',   fish:['Speckled Trout','Redfish','Flounder','Bluefish']},
+  {pts:200, label:'Offshore waters',  fish:['Spanish Mackerel','Sheepshead','Cobia']},
+  {pts:500, label:'Deep waters 🦈',   fish:['Bull Shark']},
 ];
 
 const ST = {
@@ -124,7 +186,7 @@ let bobX=0, bobT=0;
 let waitT=0, nibT=0, nibN=0, bend=0;
 let reelProg=0, reelTap=0, hooked=null;
 let msgT=0;
-let fishCount=0, best=null;
+let fishCount=0, best=null, userPts=0;
 const keys={l:0,r:0,u:0,d:0};
 let castCharging=false, castCharge=0;
 
@@ -262,7 +324,13 @@ function showMsg(txt,ms=2800){
   const e=document.getElementById('msg');
   e.innerHTML=txt;e.style.opacity='1';msgT=ms;
 }
-function pickFish(){let r=Math.random(),c=0;for(const f of FISH){c+=f.r;if(r<c)return f;}return FISH[0];}
+function pickFish(){
+  const pool=FISH.filter(f=>f.unlock<=userPts);
+  const total=pool.reduce((s,f)=>s+f.r,0);
+  let r=Math.random()*total,c=0;
+  for(const f of pool){c+=f.r;if(r<c)return f;}
+  return pool[0];
+}
 function nearPVC(){return Math.abs(px-L.pvcX)<90;}
 function nearChair(){return Math.abs(px-L.chairX)<90;}
 
@@ -1351,14 +1419,22 @@ function closeCatchCard(){
 function landFish(){
   const fish=hooked||pickFish();
   fishCount++;
+  const prevPts=userPts;
+  userPts+=fish.pts;
   document.getElementById('fc').textContent=fishCount;
-  if(!best||fish.pts>best.pts){best=fish;document.getElementById('bn').textContent=fish.name;document.getElementById('bp').style.display='';}
+  document.getElementById('pts-display').textContent=userPts;
+  if(!best||fish.pts>best.pts){best=fish;}
   const sharkMsg=fish.name==='Bull Shark'?'🦈 YOU CAUGHT A SHARK! ':'';
-  document.getElementById('ct').innerHTML=`${sharkMsg}🎉 <strong>${fish.name}</strong><br><span style="font-size:11px;opacity:.6">${fish.sci}</span><br>⚖️ ~${fish.w} lbs &nbsp;·&nbsp; <strong>${fish.pts} pts</strong>`;
+  document.getElementById('ct').innerHTML=`${sharkMsg}🎉 <strong>${fish.name}</strong><br><span style="font-size:11px;opacity:.6">${fish.sci}</span><br>⚖️ ~${fish.w} lbs &nbsp;·&nbsp; <strong>+${fish.pts} pts</strong> (${userPts} total)`;
   document.getElementById('catch-card').style.display='block';
   drawFishPicture(fish);
   lineActive=false;bend=0;state=ST.CAUGHT;
-  showMsg(fish.name==='Bull Shark'?`🦈 Bull Shark — ${fish.w} lbs! LEGENDARY!`:`${fish.name} — ~${fish.w} lbs!`,4000);
+  showMsg(fish.name==='Bull Shark'?`🦈 Bull Shark — ${fish.w} lbs! LEGENDARY!`:`${fish.name} — ~${fish.w} lbs! +${fish.pts} pts`,4000);
+  // Check for tier unlock
+  const newTier=UNLOCK_TIERS.slice().reverse().find(t=>t.pts>prevPts&&t.pts<=userPts);
+  if(newTier)setTimeout(()=>showUnlock(newTier),2200);
+  // Save to Supabase if signed in
+  sbSaveCatch(fish);
 }
 
 // ── RENDER LOOP ──
@@ -1422,8 +1498,137 @@ document.addEventListener('keyup',e=>{
 });
 
 px=C.width/2;
-showMsg('Press ▲ to wade in, then hold CAST to cast further!',4500);
 requestAnimationFrame(ts=>{last=ts;requestAnimationFrame(loop);});
+
+// ── SUPABASE ──
+const SB = supabase.createClient(
+  'https://fqvghpufbafyahfypnzw.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxdmdocHVmYmFmeWFoZnlwbnp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5OTI4NDQsImV4cCI6MjA5NzU2ODg0NH0.ZsvGpyWbf770UoiUMESv9cyXvrLXBFCWtxsLxs7PLa0'
+);
+let sbUser=null;
+
+async function sbInit(){
+  const{data:{session}}=await SB.auth.getSession();
+  if(session){await sbOnLogin(session.user);}
+  else{showAuthModal();}
+  SB.auth.onAuthStateChange((_,s)=>{if(s)sbOnLogin(s.user);});
+}
+
+async function sbOnLogin(user){
+  sbUser=user;
+  // Ensure profile row exists
+  const{data:prof}=await SB.from('profiles').select('*').eq('id',user.id).single();
+  if(prof){
+    userPts=prof.total_points||0;
+    fishCount=prof.total_fish||0;
+    document.getElementById('fc').textContent=fishCount;
+    document.getElementById('pts-display').textContent=userPts;
+    document.getElementById('user-name').textContent=prof.username;
+  }
+  hideAuthModal();
+  showMsg('Welcome back! Wade in (▲) and cast to start fishing!',4000);
+}
+
+async function sbSaveCatch(fish){
+  if(!sbUser)return;
+  await SB.from('catches').insert({user_id:sbUser.id,fish_name:fish.name,points:fish.pts});
+  await SB.from('profiles').update({total_points:userPts,total_fish:fishCount}).eq('id',sbUser.id);
+}
+
+async function sbSignUp(email,pass,username){
+  setAuthErr('');
+  const{data,error}=await SB.auth.signUp({email,password:pass});
+  if(error){setAuthErr(error.message);return;}
+  if(data.user){
+    await SB.from('profiles').insert({id:data.user.id,username,total_points:0,total_fish:0});
+    await sbOnLogin(data.user);
+  }
+}
+
+async function sbSignIn(email,pass){
+  setAuthErr('');
+  const{data,error}=await SB.auth.signInWithPassword({email,password:pass});
+  if(error){setAuthErr(error.message);return;}
+  if(data.user)await sbOnLogin(data.user);
+}
+
+async function sbSignOut(){
+  await SB.auth.signOut();
+  sbUser=null;userPts=0;fishCount=0;best=null;
+  document.getElementById('fc').textContent=0;
+  document.getElementById('pts-display').textContent=0;
+  document.getElementById('user-name').textContent='Guest';
+  showAuthModal();
+}
+
+async function sbLoadLeaderboard(){
+  const{data}=await SB.from('profiles').select('username,total_points,total_fish').order('total_points',{ascending:false}).limit(20);
+  const tbody=document.getElementById('lb-body');
+  tbody.innerHTML='';
+  (data||[]).forEach((row,i)=>{
+    const me=sbUser&&row.username===(document.getElementById('user-name').textContent);
+    tbody.innerHTML+=`<tr class="${me?'lb-me':''}"><td>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td><td>${row.username}</td><td>${row.total_fish}</td><td><strong>${row.total_points}</strong></td></tr>`;
+  });
+  if(!data||data.length===0)tbody.innerHTML='<tr><td colspan="4" style="text-align:center;opacity:.5;padding:20px">No catches yet — be the first!</td></tr>';
+}
+
+// ── AUTH UI ──
+let authMode='signin';
+function showAuthModal(){document.getElementById('auth-modal').style.display='flex';}
+function hideAuthModal(){document.getElementById('auth-modal').style.display='none';}
+function setAuthErr(msg){document.getElementById('auth-err').textContent=msg;}
+
+document.getElementById('auth-switch').addEventListener('click',()=>{
+  authMode=authMode==='signin'?'signup':'signin';
+  const isUp=authMode==='signup';
+  document.getElementById('auth-submit').textContent=isUp?'Create Account':'Sign In';
+  document.getElementById('auth-toggle').innerHTML=isUp?'Already have an account? <span id="auth-switch">Sign in</span>':"Don't have an account? <span id='auth-switch'>Sign up</span>";
+  document.getElementById('auth-username').style.display=isUp?'block':'none';
+  document.getElementById('auth-switch').addEventListener('click',arguments.callee.bind(document.getElementById('auth-switch')));
+  setAuthErr('');
+});
+
+document.getElementById('auth-submit').addEventListener('click',async()=>{
+  const email=document.getElementById('auth-email').value.trim();
+  const pass=document.getElementById('auth-pass').value;
+  if(!email||!pass){setAuthErr('Email and password required.');return;}
+  if(authMode==='signup'){
+    const username=document.getElementById('auth-username').value.trim();
+    if(!username){setAuthErr('Username required.');return;}
+    await sbSignUp(email,pass,username);
+  } else {
+    await sbSignIn(email,pass);
+  }
+});
+
+document.getElementById('auth-guest').addEventListener('click',()=>{
+  hideAuthModal();
+  showMsg('Playing as guest. Catches won\'t be saved. Sign in to track progress!',4500);
+});
+
+document.getElementById('user-pill').addEventListener('click',()=>{
+  if(sbUser){if(confirm('Sign out?'))sbSignOut();}
+  else showAuthModal();
+});
+
+// ── LEADERBOARD UI ──
+document.getElementById('lb-btn').addEventListener('click',()=>{
+  document.getElementById('lb-panel').classList.add('on');
+  sbLoadLeaderboard();
+});
+document.getElementById('lb-close').addEventListener('click',()=>{
+  document.getElementById('lb-panel').classList.remove('on');
+});
+
+// ── UNLOCK TOAST ──
+function showUnlock(tier){
+  const el=document.getElementById('unlock-toast');
+  el.textContent=`🔓 Unlocked: ${tier.label}! New fish available!`;
+  el.style.opacity='1';
+  setTimeout(()=>el.style.opacity='0',3500);
+}
+
+sbInit();
 </script>
 </body>
 </html>
