@@ -113,7 +113,7 @@ canvas { display:block; touch-action:none; }
 
 <div id="ui">
   <div id="hud">
-    <div class="pill" id="user-pill" title="Tap to sign out">👤 <span id="user-name">Guest</span></div>
+    <div class="pill" id="user-pill">👤 <span id="user-name">Sign In</span></div>
     <div class="pill">🎣 <span id="fc">0</span></div>
     <div class="pill">⭐ <span id="pts-display">0</span> pts</div>
     <div class="pill" id="lb-btn">🏆</div>
@@ -1563,7 +1563,7 @@ async function sbSignOut(){
   sbUser=null;userPts=0;fishCount=0;best=null;
   document.getElementById('fc').textContent=0;
   document.getElementById('pts-display').textContent=0;
-  document.getElementById('user-name').textContent='Guest';
+  document.getElementById('user-name').textContent='Sign In';
   showAuthModal();
 }
 
