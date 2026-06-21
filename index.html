@@ -70,7 +70,10 @@ canvas { display:block; touch-action:none; }
 #lb-table th{color:rgba(255,255,255,0.45);font-size:11px;letter-spacing:1px;padding:6px 10px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.1);}
 #lb-table td{padding:10px;color:#fff;font-size:14px;border-bottom:1px solid rgba(255,255,255,0.06);}
 .lb-me td{background:rgba(80,160,255,0.12);}
-#lb-close{margin-top:24px;padding:10px 36px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#fff;font-size:14px;cursor:pointer;}
+#lb-close{padding:10px 36px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#fff;font-size:14px;cursor:pointer;}
+#lb-signout{padding:10px 24px;background:rgba(200,40,40,0.2);border:1px solid rgba(255,80,80,0.35);border-radius:8px;color:#ff9090;font-size:14px;cursor:pointer;display:none;}
+#lb-signout.on{display:block;}
+#lb-footer{display:flex;gap:12px;margin-top:24px;}
 /* Unlock toast */
 #unlock-toast{position:absolute;left:50%;transform:translateX(-50%);top:108px;background:linear-gradient(135deg,#1a0040,#3a0080);border:1px solid rgba(190,90,255,0.65);color:#d090ff;border-radius:12px;padding:9px 20px;font-size:13px;font-weight:600;opacity:0;transition:opacity .4s;text-align:center;pointer-events:none;white-space:nowrap;}
 </style>
@@ -102,7 +105,10 @@ canvas { display:block; touch-action:none; }
     <thead><tr><th>#</th><th>Angler</th><th>Fish</th><th>Points</th></tr></thead>
     <tbody id="lb-body"></tbody>
   </table>
-  <button id="lb-close">Close</button>
+  <div id="lb-footer">
+    <button id="lb-close">Close</button>
+    <button id="lb-signout">Sign Out</button>
+  </div>
 </div>
 
 <div id="ui">
@@ -1614,10 +1620,15 @@ document.getElementById('user-pill').addEventListener('click',()=>{
 // ── LEADERBOARD UI ──
 document.getElementById('lb-btn').addEventListener('click',()=>{
   document.getElementById('lb-panel').classList.add('on');
+  document.getElementById('lb-signout').classList.toggle('on',!!sbUser);
   sbLoadLeaderboard();
 });
 document.getElementById('lb-close').addEventListener('click',()=>{
   document.getElementById('lb-panel').classList.remove('on');
+});
+document.getElementById('lb-signout').addEventListener('click',()=>{
+  document.getElementById('lb-panel').classList.remove('on');
+  sbSignOut();
 });
 
 // ── UNLOCK TOAST ──
