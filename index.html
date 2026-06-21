@@ -1524,17 +1524,20 @@ async function sbInit(){
 
 async function sbOnLogin(user){
   sbUser=user;
-  // Ensure profile row exists
-  const{data:prof}=await SB.from('profiles').select('*').eq('id',user.id).single();
-  if(prof){
-    userPts=prof.total_points||0;
-    fishCount=prof.total_fish||0;
-    document.getElementById('fc').textContent=fishCount;
-    document.getElementById('pts-display').textContent=userPts;
-    document.getElementById('user-name').textContent=prof.username;
+  let{data:prof}=await SB.from('profiles').select('*').eq('id',user.id).single();
+  if(!prof){
+    // Profile missing — create one using the email prefix as username
+    const fallback=user.email.split('@')[0];
+    await SB.from('profiles').upsert({id:user.id,username:fallback,total_points:0,total_fish:0});
+    prof={username:fallback,total_points:0,total_fish:0};
   }
+  userPts=prof.total_points||0;
+  fishCount=prof.total_fish||0;
+  document.getElementById('fc').textContent=fishCount;
+  document.getElementById('pts-display').textContent=userPts;
+  document.getElementById('user-name').textContent=prof.username;
   hideAuthModal();
-  showMsg('Welcome back! Wade in (▲) and cast to start fishing!',4000);
+  showMsg(`Welcome, ${prof.username}! Wade in (▲) and cast to start fishing!`,4000);
 }
 
 async function sbSaveCatch(fish){
